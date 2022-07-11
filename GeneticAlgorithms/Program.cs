@@ -26,6 +26,10 @@ void MultiPointCrossoverTestProcedure(string selectionMethod,
         BinaryIndividual searchedSolution = new BinaryIndividual(chromosomeLength);
         //init population
         Population population = new Population(chromosomeLength, populationSize, populationSize);
+        //init childrens' space
+        Population childrenPopulation = new Population(populationSize - elite);
+        //init parents' space
+        Population parents = new Population(numberOfParents);
         //init technical variables
         int epoch = 0;
         int fitnessRepeatStartCondition = 150;
@@ -52,26 +56,22 @@ void MultiPointCrossoverTestProcedure(string selectionMethod,
             if (bestFitness == lastFitness) fitnessRepeatCounter--;
             else lastFitness = bestFitness;
 
-            //init childrens' space
-            Population childPopulation = new Population(populationSize-elite);
-
-            for (int i = 0; i < childPopulation.Size(); i++)
+            for (int i = 0; i < childrenPopulation.Size(); i++)
             {
-                //init parents' space
-                Population parents = new Population(numberOfParents);
+                
                 //parents selection
                 if (selectionMethod == "Rank") ParentSelectionAlgorithms.RankSelection(parents, population, numberOfCandidates);
                 else ParentSelectionAlgorithms.RouletteSelection(parents, population);
                 //crossover
                 BinaryIndividual child = CrossoverOperators.MultiPointCrossover(parents, chromosomeLength);
                 //filling children slot
-                childPopulation.SetChromosome(i, child);
+                childrenPopulation.SetChromosome(i, child);
             }
 
             //swap population with children
             for (int i = elite; i < population.Size(); i++)
             {
-                population.SetChromosome(i, childPopulation.GetChromosome(i-elite));
+                population.SetChromosome(i, childrenPopulation.GetChromosome(i-elite));
             }
 
             //apply mutation
@@ -86,22 +86,22 @@ void MultiPointCrossoverTestProcedure(string selectionMethod,
     }
 }
 
-void CHCTestProcedure(string selectionMethod,
-                         int chromosomeLength,
+void CHCTestProcedure(int chromosomeLength,
                          int populationSize,
-                         int numberOfParents,
-                         int numberOfCandidates,
-                         int elite,
-                         int mutationProbability,
-                         int mutatedPositions,
+                         int elite = 1,
                          int runsNumber = 10)
 {
     for (int run = 0; run < runsNumber; run++)
     {
         //init searched solution
         BinaryIndividual searchedSolution = new BinaryIndividual(chromosomeLength);
+
         //init population
         Population population = new Population(chromosomeLength, populationSize, populationSize);
+
+        //init childrens' space
+        Population childrenPopulation = new Population(populationSize - elite);
+
         //init technical variables
         int epoch = 0;
         int fitnessRepeatStartCondition = 150;
@@ -129,44 +129,42 @@ void CHCTestProcedure(string selectionMethod,
             if (bestFitness == lastFitness) fitnessRepeatCounter--;
             else lastFitness = bestFitness;
 
-            //init childrens' space
-            Population childPopulation = new Population(populationSize - elite);
+            if (bestFitness == 1) break;
 
-            for (int i = 0; i < childPopulation.Size(); i++)
+            for (int i = 0; i < childrenPopulation.Size(); i++)
             {
                 //no parents selection
                 BinaryIndividual child = CrossoverOperators.HalfUniformCrossover(population, chromosomeLength, elite, ref treshold);
                 //filling children slot
-                childPopulation.SetChromosome(i, child);
+                childrenPopulation.SetChromosome(i, child);
             }
 
             //swap population with children
             for (int i = elite; i < population.Size(); i++)
             {
-                population.SetChromosome(i, childPopulation.GetChromosome(i - elite));
+                population.SetChromosome(i, childrenPopulation.GetChromosome(i - elite));
             }
             Console.Write($"{epoch} - {lastFitness}                      \r");
             epoch++;
         }
-        Console.WriteLine($"{epoch} - {lastFitness}");
+        Console.WriteLine($"{epoch} - {lastFitness}                      ");
     }
 }
-// metoda selekcji, długość chromosomu, liczebność populacji, liczba rodziców, liczba kandydatów, elita, prawdopodobieństwo mutacji, mutowane pozycje)
-int chromosomeLength = 400;
+
+int chromosomeLength = 800;
 int populationSize = 400;
 int parents = 4;
 int candidates = 40;
 int elite = 20;
 int mutationProbability = 3;
-int mutatedPOsitions = 100;
+int mutatedPositions = 100;
 
-//MultiPointCrossoverTestProcedure("Roulette", chromosomeLength, populationSize, parents, candidates, elite, mutationProbability, mutatedPOsitions);
-//Console.WriteLine("----");
-MultiPointCrossoverTestProcedure("Rank", chromosomeLength, populationSize, parents, candidates, elite, mutationProbability, mutatedPOsitions);
+MultiPointCrossoverTestProcedure("Roulette", chromosomeLength, populationSize, parents, candidates, elite, mutationProbability, mutatedPositions);
+Console.WriteLine("----");
+MultiPointCrossoverTestProcedure("Rank", chromosomeLength, populationSize, parents, candidates, elite, mutationProbability, mutatedPositions);
 Console.WriteLine("----");
 
 
 populationSize = 10;
-elite = 1;
 
-CHCTestProcedure("Rank", chromosomeLength, populationSize, parents, candidates, elite, mutationProbability, mutatedPOsitions);
+CHCTestProcedure(chromosomeLength, populationSize);
